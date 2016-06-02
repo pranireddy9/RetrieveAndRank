@@ -1,8 +1,10 @@
 # RetrieveAndRank
 
 This is sample retrieve and rank..
+
 Stage 1: Get your service credentials
 Before you can work with a service in Bluemix, you need service credentials. 
+
 Stage 2: Create a cluster
 To use the Retrieve and Rank service, you must create a Solr cluster. A Solr cluster manages your search collections, that we will create later.
 Stage 3: Create a collection and add documents
