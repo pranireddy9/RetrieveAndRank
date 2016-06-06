@@ -52,8 +52,8 @@ public class CerebriRetrieveAndRank {
 	private static final String username = "3c4c8888-5e2c-4ebf-a35a-b33abbe3fa0f";
 	private static final String password = "VGlLv42xF6Ba";
 	private static final String clusterId = "sc314b618d_cf6e_446b_983a_bad2659b8847";
-	private static final String configName = "cranfield_solr_config";
-	private static final String collection = "cerebri_collection_new";
+	private static final String configName = "example_config";
+	private static final String collection = "example_collection";
 	private static final String configzip =  "cranfield_solr_config.zip";
 	private static final String rankercsv =  "cranfield_gt.csv";
 	private static final String cranfielddatajson =  "cranfield_data.json";
@@ -76,7 +76,8 @@ public class CerebriRetrieveAndRank {
 		//cleanUp(service,solrClient);
 		//createRanker(service);
 		//getRankers(service);
-		getRankerStatus(service,"3b140ax15-rank-2752");
+		//getRankerStatus(service,"3b140ax14-rank-2896");
+		//deleteRanker(service,"3b140ax14-rank-2834");
 		
 	}
 	
@@ -162,6 +163,14 @@ public class CerebriRetrieveAndRank {
 		 service.deleteSolrClusterConfiguration(clusterId, configName);
 	        System.out.println("Configuration deleted.");
 	 }
+
+	/* Delete the ranker */
+	public static void deleteRanker(RetrieveAndRank service, String id){
+		service.deleteRanker(id);
+		System.out.println("ranker deleted.");
+	}
+
+
 	 /*Create Solr collection*/
 	 
 	 public static void createCollectionRequest(RetrieveAndRank service,SolrClient solrClient){
