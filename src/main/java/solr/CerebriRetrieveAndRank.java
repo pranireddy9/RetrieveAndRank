@@ -386,11 +386,24 @@ public class CerebriRetrieveAndRank {
 			FileWriter fileWriter = null;
 			CSVPrinter csvFilePrinter = null;
 			CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+			String gt = "";
+			//String gt = "184,3,29,3,31,3,12,2,51,2,102,2,13,1,14,1,15,1,57,3,378,3,859,3,185,2,30,2,37,2,52,1,142,1,195,1,875,3,56,2,66,2,95,2,462,1,497,2,858,2,876,2,879,2,880,2,486,0";
 			boolean isHeader = true;
 			for(int i = 0; i<csvRecords.size();i++){
 				CSVRecord record = csvRecords.get(i);
 				String question = record.get(0);
-				String gt = "184,3,29,3,31,3,12,2,51,2,102,2,13,1,14,1,15,1,57,3,378,3,859,3,185,2,30,2,37,2,52,1,142,1,195,1,875,3,56,2,66,2,95,2,462,1,497,2,858,2,876,2,879,2,880,2,486,0";
+				String csvRecord = record.toString();
+				for(int k =0;k<record.size();k++){
+					if(k==0){
+						question = record.get(0);
+					}else{
+						if(k == (record.size()-1)){
+						gt = gt + record.get(k);
+					}else{
+						gt = gt + record.get(k) + ",";
+					}
+				}
+				}
 				String curl = "curl -k -s -v -u "+username+":"+password+ " http://gateway.watsonplatform.net/retrieve-and-rank/api/v1/solr_clusters/" + clusterId + "/"+collection+"/fcselect?q="+question+"&gt="+gt+"&generateHeader="+isHeader+"&rows=10&returnRSInput=true&wt=json";
 //				ProcessBuilder p=new ProcessBuilder("curl","-k","-s", "-v","-u",
 //		                username + ":" + password, curl);
