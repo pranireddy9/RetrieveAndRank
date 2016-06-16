@@ -1,10 +1,14 @@
 package solr;
 
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -12,6 +16,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -49,15 +57,17 @@ import com.ibm.watson.developer_cloud.retrieve_and_rank.v1.model.SolrClusterOpti
 
 public class CerebriRetrieveAndRank {
 	
-	private static final String username = "3c4c8888-5e2c-4ebf-a35a-b33abbe3fa0f";
-	private static final String password = "VGlLv42xF6Ba";
-	private static final String clusterId = "sc314b618d_cf6e_446b_983a_bad2659b8847";
+	private static final String username = "7a5dafc4-8ca2-4e5c-bf08-f9a93db13dc2";
+	private static final String password = "aPIRdD47EOZx";
+	private static final String clusterId = "sc8d29e583_a5d7_4cc5_b7cc_ebae25e7664e";
 	private static final String configName = "example_config";
 	private static final String collection = "example_collection";
 	private static final String configzip =  "cranfield_solr_config.zip";
 	private static final String rankercsv =  "cranfield_gt.csv";
+	private static final String traindata =  "train.csv";
 	private static final String cranfielddatajson =  "cranfield_data.json";
-	
+	private static final String [] FILE_HEADER_MAPPING = {"id","firstName","lastName","gender","age"};
+	private static final String NEW_LINE_SEPARATOR = "\n";
 	
 	public static void main(String[] args) throws IOException, SolrServerException {
 		// TODO Auto-generated method stub
@@ -75,6 +85,8 @@ public class CerebriRetrieveAndRank {
 		//getDocumentBySolrQuery(solrClient);
 		//cleanUp(service,solrClient);
 		//createRanker(service);
+		//createRankerWithPython(service);
+		createRankerWithJava(service);
 		//getRankers(service);
 		//getRankerStatus(service,"3b140ax14-rank-2896");
 		//deleteRanker(service,"3b140ax14-rank-2834");
@@ -82,7 +94,6 @@ public class CerebriRetrieveAndRank {
 	}
 	
 	/* create solr cluster*/
-
 	public static void createSolrCluster(RetrieveAndRank service){
 		SolrClusterOptions options = new SolrClusterOptions("Cerebri cluster", 1);
 		SolrCluster cluster = service.createSolrCluster(options);
@@ -318,9 +329,116 @@ public class CerebriRetrieveAndRank {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	
+		
+		
+
 	Ranker ranker = service.createRanker("ranker2", rankerCsv);
 	System.out.println(ranker);
+	}
+	
+	/*Create ranker*/
+	public static void createRankerWithPython(RetrieveAndRank service){
+		String pythonScriptPath = "train.py";
+		String csvPath = "cranfield_gt.csv";
+		String[] cmd = new String[2];
+		String pyScript = "python " + pythonScriptPath + " -u " + username+":"+password + " -i " + csvPath + " -c " + clusterId + " -x example_collection -n " + "'example_ranker'";
+		cmd[0] = pyScript; // check version of installed python: python -V
+		cmd[1] = pythonScriptPath;
+		 
+		// create runtime to execute external command
+		Runtime rt = Runtime.getRuntime();
+		Process pr = null;
+		try {
+			pr = rt.exec("ps -ef");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 
+		// retrieve output from python script
+		BufferedReader bfr = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+		String line = "";
+		try {
+			while((line = bfr.readLine()) != null) {
+			// display each output line form python script
+			System.out.println(line);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static void createRankerWithJava(RetrieveAndRank service){
+		URL url = CerebriRetrieveAndRank.class.getClassLoader().getResource(rankercsv);
+		URL writeurl = CerebriRetrieveAndRank.class.getClassLoader().getResource(rankercsv);
+		File csv=null;
+		File writecsv=null;
+		try {
+			csv = new File(url.toURI());
+			writecsv = new File(writeurl.toURI());
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        FileReader fileReader = null;
+		CSVParser csvFileParser = null;
+		//Create the CSVFormat object with the header mapping
+       CSVFormat csvFileFormat = CSVFormat.EXCEL.withSkipHeaderRecord();
+        try {
+        	
+        	//Create a new list of student to be filled by CSV file data 
+        	List students = new ArrayList();
+            
+            //initialize FileReader object
+            fileReader = new FileReader(csv);
+            
+            //initialize CSVParser object
+            csvFileParser = new CSVParser(fileReader, csvFileFormat);
+            
+            //Get a list of CSV file records
+            List<CSVRecord> csvRecords = csvFileParser.getRecords(); 
+            FileWriter fileWriter = null;
+    		CSVPrinter csvFilePrinter = null;
+    		//Create the CSVFormat object with "\n" as a record delimiter
+            CSVFormat csvWriteFileFormat = CSVFormat.DEFAULT.withRecordSeparator(NEW_LINE_SEPARATOR);
+            
+            //Read the CSV file records starting from the second record to skip the header
+            for (int i = 1; i < csvRecords.size(); i++) {
+            	CSVRecord record = csvRecords.get(i);
+            	System.out.println("teh record is "+record.get("values"));
+           fileWriter = new FileWriter(traindata);
+          // curl -k -s %s -u %s -d "q=%s&gt=%s&generateHeader=%s&rows=%s&returnRSInput=true&wt=json" "%s % (VERBOSE, CREDS, question, relevance, add_header, ROWS, SOLRURL)"
+    			//initialize CSVPrinter object 
+    	        csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+            	//Create a new student object and fill his data
+    	        
+//    	        for (Student student : students) {
+//    				List studentDataRecord = new ArrayList();
+//    	            studentDataRecord.add(String.valueOf(student.getId()));
+//    	            studentDataRecord.add(student.getFirstName());
+//    	            studentDataRecord.add(student.getLastName());
+//    	            studentDataRecord.add(student.getGender());
+//    	            studentDataRecord.add(String.valueOf(student.getAge()));
+//    	            csvFilePrinter.printRecord(studentDataRecord);
+//    			}
+			}
+            
+        } 
+        catch (Exception e) {
+        	System.out.println("Error in CsvFileReader !!!");
+            e.printStackTrace();
+        } finally {
+            try {
+                fileReader.close();
+                csvFileParser.close();
+            } catch (IOException e) {
+            	System.out.println("Error while closing fileReader/csvFileParser !!!");
+                e.printStackTrace();
+            }
+        }
+
+	
 	}
 	
 	/*List rankers*/
