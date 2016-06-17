@@ -41,6 +41,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
+import org.apache.solr.client.solrj.response.CollectionAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
@@ -57,9 +58,9 @@ public class CerebriRetrieveAndRank {
 	
 	private static final String username = "7a5dafc4-8ca2-4e5c-bf08-f9a93db13dc2";
 	private static final String password = "aPIRdD47EOZx";
-	private static final String clusterId = "scd392b903_524d_4585_9753_80317d57bc37";
+	private static final String clusterId = "sc8d29e583_a5d7_4cc5_b7cc_ebae25e7664e";
 	private static final String configName = "cranfield_solr_config";
-	private static final String collection = "cerebri_collection_new";
+	private static final String collection = "example_collection";
 	private static final String configzip =  "cranfield_solr_config.zip";
 	private static final String rankercsv =  "cranfield_gt.csv";
 	private static final String writercsv =  "traindata.txt";
@@ -200,31 +201,31 @@ public class CerebriRetrieveAndRank {
 	 }
 	 /*Create Solr collection*/
 	 
-//	 public static void createCollectionRequest(RetrieveAndRank service,SolrClient solrClient){
-//			SolrCluster cluster = service.getSolrCluster(clusterId);
-//		CollectionAdminRequest.Create createCollectionRequest =
-//		        new CollectionAdminRequest.Create();
-//		createCollectionRequest.setCollectionName(collection);
-//		createCollectionRequest.setConfigName(configName);
-//		System.out.println("Creating collection...");
-//		CollectionAdminResponse response = null;
-//		try {
-//			response = createCollectionRequest.process(solrClient);
-//		} catch (SolrServerException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		    if (!response.isSuccess()) {
-//		      System.out.println(response.getErrorMessages());
-//		      throw new IllegalStateException("Failed to create collection: "
-//		          + response.getErrorMessages().toString());
-//		    }
-//		System.out.println("Collection created.");
-//		System.out.println(response);
-//	}
+	 public static void createCollectionRequest(RetrieveAndRank service,SolrClient solrClient){
+			ServiceCall<SolrCluster> cluster = service.getSolrCluster(clusterId);
+		CollectionAdminRequest.Create createCollectionRequest =
+		        new CollectionAdminRequest.Create();
+		createCollectionRequest.setCollectionName(collection);
+		createCollectionRequest.setConfigName(configName);
+		System.out.println("Creating collection...");
+		CollectionAdminResponse response = null;
+		try {
+			response = createCollectionRequest.process(solrClient);
+		} catch (SolrServerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		    if (!response.isSuccess()) {
+		      System.out.println(response.getErrorMessages());
+		      throw new IllegalStateException("Failed to create collection: "
+		          + response.getErrorMessages().toString());
+		    }
+		System.out.println("Collection created.");
+		System.out.println(response);
+	}
 	 /*Delete Solr collection*/
 
 	private static void cleanUp(RetrieveAndRank service, SolrClient solrClient) {
@@ -404,11 +405,14 @@ public class CerebriRetrieveAndRank {
 					}
 				}
 				}
-				String curl = "curl -k -s -v -u "+username+":"+password+ " http://gateway.watsonplatform.net/retrieve-and-rank/api/v1/solr_clusters/" + clusterId + "/"+collection+"/fcselect?q="+question+"&gt="+gt+"&generateHeader="+isHeader+"&rows=10&returnRSInput=true&wt=json";
-//				ProcessBuilder p=new ProcessBuilder("curl","-k","-s", "-v","-u",
+				String curl = "curl -k -s -v -u "+username+":"+password+ " \"q="+question+"&gt="+gt+"&generateHeader="+isHeader+"&rows=10&returnRSInput=true&wt=json\" " + "\"http://gateway.watsonplatform.net/retrieve-and-rank/api/v1/solr_clusters/" + clusterId + "/"+collection+"/fcselect\"";
+				 ProcessBuilder builder = new ProcessBuilder(curl);
+				  builder.redirectOutput(writecsv);
+				  builder.start();
+				//				ProcessBuilder p=new ProcessBuilder("curl","-k","-s", "-v","-u",
 //		                username + ":" + password, curl);
-				Process p = Runtime.getRuntime().exec(curl);
-				p.getInputStream();
+//				Process p = Runtime.getRuntime().exec(curl);
+//				p.getInputStream();
 				//curl -k -s %s -u %s -d "q=%s&gt=%s&generateHeader=%s&rows=%s&returnRSInput=true&wt=json" "%s"' (VERBOSE, CREDS, question, relevance, add_header, ROWS, SOLRURL)
 				//this is the place where we form the curl command to watson http://gateway.watsonplatform.net/retrieve-and-rank/api/v1/solr_clusters/{cluster_id}/{collection_name}/fcselect?q=in practice, how close to reality are the assumptions that the flow in a hypersonic shock tube using nitrogen is non-viscous and in thermodynamic equilibrium.&gt=656,2,1313,2,1317,2,1316,1,1318,2,1319,2,1157,2,1274,2,1286,0&generateHeader=false&rows=50&returnRSInput=true&wt=json&fl=id 
 			isHeader = false;
