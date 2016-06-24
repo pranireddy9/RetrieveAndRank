@@ -56,9 +56,9 @@ import com.ibm.watson.developer_cloud.retrieve_and_rank.v1.model.SolrClusters;
 
 public class CerebriRetrieveAndRank {
 
-	private static final String username = "7a5dafc4-8ca2-4e5c-bf08-f9a93db13dc2";
-	private static final String password = "aPIRdD47EOZx";
-	private static final String clusterId = "sc8d29e583_a5d7_4cc5_b7cc_ebae25e7664e";
+	private static final String username = "7650a188-3a09-4a67-a566-2f8c84c83a41";
+	private static final String password = "1s1zijaG7seV";
+	private static final String clusterId = "scf04d1223_5b93_4ab1_b3ca_c3457e677ea7";
 	private static final String configName = "cranfield_solr_config";
 	private static final String collection = "example_collection";
 	private static final String configzip = "cranfield_solr_config.zip";
@@ -72,23 +72,23 @@ public class CerebriRetrieveAndRank {
 		RetrieveAndRank service = new RetrieveAndRank();
 		service.setUsernameAndPassword(username, password);
 		SolrClient solrClient = getSolrClient(service.getSolrUrl(clusterId), username, password);
-
-		// createSolrCluster(service);
-		// getSolrClusters(service);
+		try {
+		 //createSolrCluster(service);
+		 
+			//getSolrClusters(service);
+		
 		// getSolrCluster(service);
-		// uploadSolrClusterConfigurationZip(service);
+		//	deleteCluster(service);
+		 //uploadSolrClusterConfigurationZip(service);
 		// getSolrClusterConfigurations(service);
 		// getCofiguration(service);
 		// createCollectionRequest(service, solrClient);
-		// getDocumentBySolrQuery(solrClient);
+		 //getDocumentBySolrQuery(solrClient);
 		// cleanUp(service,solrClient);
-		// try {
-		// createRankerWithJava(service);
-		// } catch (InterruptedException e) {
-		// e.printStackTrace();
-		// } catch (ExecutionException e) {
-		// e.printStackTrace();
-		// }
+		
+		 createRankerWithJava(service);
+		 
+
 		// try {
 		// createRanker(service);
 		// } catch (InterruptedException e) {
@@ -98,13 +98,17 @@ public class CerebriRetrieveAndRank {
 		// }
 		// deleteRanker(service, "3b140ax14-rank-3044");
 		// getRankers(service);
-		// try {
-		// getRankerStatus(service,"3b140ax14-rank-3046");
-		// } catch (ExecutionException e) {
-		// e.printStackTrace();
-		// } catch (InterruptedException e) {
-		// e.printStackTrace();
-		// }
+//		 try {
+//		 getRankerStatus(service,"3b140ax15-rank-2076");
+//		 } catch (ExecutionException e) {
+//		 e.printStackTrace();
+//		 } catch (InterruptedException e) {
+//		 e.printStackTrace();
+//		 }
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
 
 	}
 
@@ -124,9 +128,9 @@ public class CerebriRetrieveAndRank {
 	}
 
 	/* List Solr clusters */
-	public static void getSolrClusters(RetrieveAndRank service) {
+	public static void getSolrClusters(RetrieveAndRank service) throws InterruptedException, ExecutionException {
 		ServiceCall<SolrClusters> clusters = service.getSolrClusters();
-		System.out.println(clusters);
+		System.out.println(clusters.rx().get().getSolrClusters());
 	}
 
 	/* Get information about a Solr cluster */
@@ -136,7 +140,17 @@ public class CerebriRetrieveAndRank {
 
 	/* Delete Solr cluster */
 	public static void deleteCluster(RetrieveAndRank service) {
-		service.deleteSolrCluster(clusterId);
+		
+			ServiceCall<Void> call = service.deleteSolrCluster(clusterId);
+			
+			while (!call.rx().isDone()) {
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		
+		} 
 	}
 
 	/* Upload Solr configuration */
@@ -148,12 +162,21 @@ public class CerebriRetrieveAndRank {
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
-		service.uploadSolrClusterConfigurationZip(clusterId, configName, configZip);
+		ServiceCall<Void> service1 = service.uploadSolrClusterConfigurationZip(clusterId, configName, configZip);
+		
+		while (!service1.rx().isDone()) {
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		} 
+		System.out.println("defrohjkiujhtreftyuiol");
 	}
 
 	/* List Solr configurations */
-	public static void getSolrClusterConfigurations(RetrieveAndRank service) {
-		System.out.println(service.getSolrClusterConfigurations(clusterId));
+	public static void getSolrClusterConfigurations(RetrieveAndRank service) throws InterruptedException, ExecutionException {
+		System.out.println(service.getSolrClusterConfigurations(clusterId).rx().get().getSolrConfigs());
 	}
 
 	/* Get configuration */
@@ -321,11 +344,12 @@ public class CerebriRetrieveAndRank {
 						}
 					}
 				}
-				String curl = "curl -k -s -v -u " + username + ":" + password + " \"q=" + question + "&gt=" + gt
+				String curl = "curl.exe -k -s -v -u " + username + ":" + password + " \"q=" + question + "&gt=" + gt
 						+ "&generateHeader=" + isHeader + "&rows=10&returnRSInput=true&wt=json\" "
 						+ "\"http://gateway.watsonplatform.net/retrieve-and-rank/api/v1/solr_clusters/" + clusterId
 						+ "/" + collection + "/fcselect\"";
 				ProcessBuilder builder = new ProcessBuilder(curl);
+				builder.command();
 				builder.redirectOutput(writecsv);
 				builder.start();
 				// ProcessBuilder p=new ProcessBuilder("curl","-k","-s",
